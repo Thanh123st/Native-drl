@@ -1,4 +1,6 @@
 import { registerRootComponent } from 'expo';
+import { LogBox } from "react-native";
+LogBox.ignoreLogs(["You are initializing Firebase Auth for React Native without providing AsyncStorage"]);
 
 import App from './App';
 
