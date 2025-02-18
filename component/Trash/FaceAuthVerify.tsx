@@ -1,17 +1,19 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useState, useRef } from 'react';
+import { useState, useRef, useContext } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 import axios from 'axios';
+import { AuthContext } from '../../Context/Authcontext';
+import * as FaceDetector from 'expo-face-detector';
 
-export default function CameraScreen() {
+export default function CameraScreen({ activityid }: { activityid: string }) {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const [capturedImage, setCapturedImage] = useState<string | null>(null); // Lưu trữ ảnh đã chụp
   const cameraRef = useRef(null); // Tham chiếu đến camera
   const [isProcessing, setIsProcessing] = useState(false); // Trạng thái xử lý
-
+  const authContext = useContext(AuthContext);
+  const { apiUrl, token,setTokenauth,tokenauth } = authContext;
   if (!permission) {
-    // Camera permissions are still loading.
     return <View />;
   }
 
@@ -24,6 +26,7 @@ export default function CameraScreen() {
       </View>
     );
   }
+  
 
   const takePhoto = async () => {
     setIsProcessing(true); // Đánh dấu quá trình đang diễn ra
@@ -40,35 +43,43 @@ export default function CameraScreen() {
 
   const postImageToApi = async (imageUri: string) => {
     const formData = new FormData();
-    const activityId = '67b06ee2e711442cd8aa40b6'; // Đảm bảo bạn có activity_id hợp lệ
+    const activityId = activityid; // Đảm bảo bạn có activity_id hợp lệ
   
     try {
-      // Tải ảnh từ URI về dưới dạng Blob
       const response = await fetch(imageUri);
       const blob = await response.blob();
   
-      // Thêm ảnh vào formData
       formData.append('image', blob, 'image.jpg');
       formData.append('activity_id', activityId);  // Thêm activity_id vào formData
   
-      // Gửi yêu cầu lên API
-      const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YWYyNjlhM2RkZDE3OTAyNDRiZWIxYSIsImVtYWlsIjoic3R1ZGVudEBleGFtcGxlLmNvbSIsInJvbGUiOiJzdHVkZW50IiwiaWF0IjoxNzM5NjE2ODUzLCJleHAiOjE3Mzk2MjA0NTN9.Ab5qGPYcIgeO81cMqLqz9VSuaxgrm_4gHJlBxPYbn-k"; // Đảm bảo bạn có token hợp lệ
-      console.log("Ảnh datapost đi",formData);
-      const apiResponse = await axios.post('http://192.168.10.47:8000/api/face/verify', formData, {
+      console.log("Ảnh datapost đi", formData);
+  
+      const apiResponse = await axios.post(`${apiUrl}/api/face/verify`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',  // Đảm bảo Content-Type là 'multipart/form-data'
           Authorization: `Bearer ${token}`,  // Gửi token đúng trong header
         },
-        timeout: 200000,
+        timeout: 2000000,
       });
   
-      console.log("DAAT",apiResponse.data)
-      const tokenFromApi = apiResponse.data.token;
-      console.log('Token từ API:', tokenFromApi);
+      // Kiểm tra mã trạng thái HTTP
+      if (apiResponse.status >= 200 && apiResponse.status < 300) {
+        console.log("Data res:", apiResponse.data);
+        const tokenFromApi = apiResponse.data.token;
+        setTokenauth(tokenFromApi);
+        console.log("TOKEN AUTH Done", tokenauth);
+  
+        console.log('Token từ API:', tokenFromApi);
+      } else {
+        console.error('Lỗi từ API: ', apiResponse.statusText);
+      }
     } catch (error) {
       console.error('Lỗi khi gửi ảnh lên API:', error);
     }
   };
+  
+  console.log("TOKEN AUTH",tokenauth);
+
 
   return (
     <View style={styles.container}>
@@ -83,6 +94,8 @@ export default function CameraScreen() {
           </TouchableOpacity>
         </View>
       </CameraView>
+      
+      
 
       {capturedImage && (
         <View style={styles.resultContainer}>
@@ -105,6 +118,7 @@ const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
+    borderRadius: 75,
   },
   buttonContainer: {
     flex: 1,

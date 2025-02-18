@@ -14,6 +14,8 @@ interface AuthContextType {
   accountName: string;
   setAccountName: (name: string) => void;
   apiUrl: string;
+  tokenauth: string;
+  setTokenauth: (name: string) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -28,8 +30,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string>('');
   const [role, setRole] = useState<string>('');
   const [accountName, setAccountName] = useState<string>('');
-
-  const apiUrl = 'http://192.168.10.47:8000';
+  const [tokenauth, setTokenauth] = useState<string>('');
+  const apiUrl = 'http://192.168.10.72:8000';
 
   // Khôi phục trạng thái đăng nhập từ AsyncStorage
   useEffect(() => {
@@ -68,6 +70,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         accountName,
         setAccountName,
         apiUrl,
+        setTokenauth,
+        tokenauth
       }}
     >
       {children}
