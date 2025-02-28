@@ -1,13 +1,25 @@
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View, SafeAreaView , Platform, StatusBar, TouchableOpacity} from 'react-native';
 import { Text, Button, Card } from 'native-base';
-import HeaderComponent from '../../component/View/Header';
-import Fooster from '../../component/View/Fooster';
+import { useNavigation } from '@react-navigation/native';
+import { FontAwesome } from '@expo/vector-icons';
 const TermsAndPrivacyScreen = () => {
+  const navigation = useNavigation();
   return (
-    <ScrollView style={styles.container}>
-      {/* Điều khoản sử dụng */}
-      <HeaderComponent></HeaderComponent>
+    <SafeAreaView style={{ flex: 1, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0}}>
+    <View style={styles.container}>
+      {/* Nút X để quay lại */}
+      <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
+        <FontAwesome name="close" size={24} color="black" />
+      </TouchableOpacity>
+
+      {/* Nội dung */}
+      <Text style={styles.titlee}>Điều khoản & Chính sách</Text>
+    </View>
+
+    <SafeAreaView style={styles.safeArea}>
+      
+    <ScrollView>
       <Card style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.title}>Điều khoản sử dụng</Text>
@@ -81,34 +93,29 @@ const TermsAndPrivacyScreen = () => {
           </Text>          
         </View>
       </Card>
-
-      {/* Nút chấp nhận */}
-      <View style={styles.buttonContainer}>
-        <Button onPress={() => alert('Chấp nhận điều khoản')}>
-          <Text>Đồng ý</Text>
-        </Button>
-      </View>
-      <Fooster></Fooster>
     </ScrollView>
+    </SafeAreaView>
+    </SafeAreaView>
+    
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
+  safeArea: {
+    flex: 8,
+    marginLeft: 20,
+    marginRight: 20
   },
   card: {
     marginBottom: 16,
-    padding: 16,
+    padding: 60,
   },
   cardHeader: {
     paddingBottom: 10,
-    borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
   cardBody: {
-    marginTop: 10,
+    marginTop: 20,
   },
   title: {
     fontSize: 20,
@@ -121,6 +128,25 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginTop: 20,
     alignItems: 'center',
+  },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'stranfrom',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 20,   // Khoảng cách từ trên xuống (tránh thanh trạng thái)
+    left: 10,  // Đưa nút X sát mép trái
+    backgroundColor: 'rgba(0, 0, 0, 0.1)', // Màu nền trong suốt nhẹ
+    padding: 10,
+    borderRadius: 50, // Làm tròn viền
+  },
+  titlee: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 

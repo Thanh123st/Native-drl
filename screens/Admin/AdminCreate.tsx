@@ -1,25 +1,36 @@
 import React, { useState, useEffect, useContext } from "react";
-import { View, Text, TextInput, Alert, StyleSheet } from "react-native";
+import { View, Text, TextInput, Alert, StyleSheet, SafeAreaView ,TouchableOpacity , Modal} from "react-native";
 import { Select, CheckIcon, Button } from "native-base";
 import { getCurrentLocation } from "../../component/locationService";
 import { AuthContext } from "../../Context/Authcontext";
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { Checkbox } from "native-base";
+import Icon from "react-native-vector-icons/MaterialIcons"; // Chọn icon phù hợp
 import MapScreen from "../../component/View/MapScreen";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-
+import { FontAwesome } from "@expo/vector-icons";
+import { useNavigation } from '@react-navigation/native';
+import axios from "axios";
 const AdminCreate: React.FC = () => {
   const [name, setName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [date, setDate] = useState(new Date());
   const [show, setShow] = useState(false);
   const [formattedDate, setFormattedDate] = useState('');
+  const[category,SetCategory]= useState([]);
+  
+  const navigation = useNavigation();
+  const handleCheckboxChange = (value) => {
+    SetCategory((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
+  };
 
   const onChange = (event: any, selectedDate: Date | undefined) => {
     const currentDate = selectedDate || date;
-    setShow(false);
+    setShow(true);
     setDate(currentDate);
-    setFormattedDate(currentDate.toISOString());  // Định dạng ngày theo ISO
+    setFormattedDate(currentDate.toISOString());
   };
 
   const [location, setLocation] = useState<any>(null);
@@ -27,10 +38,40 @@ const AdminCreate: React.FC = () => {
   const authContext = useContext(AuthContext);
   const[type,SetType]= useState<string>("");
   const[level,SetLevel]= useState<string>("");
-  const[category,SetCategory]= useState<string>("");
-
+  const [groupId,SetgroupId] = useState<string>("");
   const [locationPost,setLocationPost] = useState<any>(null);
+
+  const [groupList, setGroupList] = useState([]);
+
+  const fetchGroupAdminList = async () => {
+    try {
+      const response = await axios.get(`${apiUrl}/group-admin/list`);
+      if (response.data && Array.isArray(response.data)) {
+        const clubList = response.data.map(item => ({
+          id: item._id,
+          name: item.name
+        }));
+        setGroupList(clubList); // Lưu danh sách nhóm vào state
+        console.log("Danh sách nhóm:", clubList);
+      } else {
+        console.error("Dữ liệu trả về không hợp lệ:", response.data);
+      }
+    } catch (error) {
+      console.error("Lỗi khi gọi API:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchGroupAdminList();
+  }, []);
+
   const { apiUrl, token } = authContext;
+
+  const handleConfirm = (selectedDate: Date) => {
+    setDate(selectedDate);
+    setShow(false); // Đóng modal sau khi chọn ngày
+  };
+
   useEffect(() => {
     getCurrentLocation()
       .then(setLocation)
@@ -39,6 +80,7 @@ const AdminCreate: React.FC = () => {
   console.log("đia chỉ",JSON.stringify(location));
 
   const handleSubmit = async () => {
+    
     setLocationPost(JSON.stringify(location));
     const lati = await AsyncStorage.getItem('Latitude');
     const long = await AsyncStorage.getItem('Longitude');
@@ -51,7 +93,8 @@ const AdminCreate: React.FC = () => {
       ],
       type,
       level,
-      category
+      category,
+      groupId,
 
     };
 
@@ -61,7 +104,7 @@ const AdminCreate: React.FC = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YjQxYWU5ZjM1OTFjMDc4MTM1NzBkYyIsImVtYWlsIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3Mzk4NTk0MjAsImV4cCI6MTczOTk0NTgyMH0.I_yIus4zzi00C86g9m_z2Xi2md036aWQZPbLnuA5mds`
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       });
@@ -79,8 +122,12 @@ const AdminCreate: React.FC = () => {
     }
   };
 
+  const [isOpen, setIsOpen] = React.useState(false);
+
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={styles.container}>
       <Text style={styles.label}>Tên hoạt động:</Text>
       <TextInput
         style={styles.input}
@@ -98,18 +145,24 @@ const AdminCreate: React.FC = () => {
       />
 
       <Text style={styles.label}>Ngày:</Text>
-      <Button onPress={() => setShow(!show)} style={{ marginTop: 10 }}>
-        <Text>Chọn ngày giờ</Text>
-      </Button>
+      
 
-      {show && (
-        <DateTimePicker
-          value={date}
+      <View style={{ flexDirection: "row" }}>
+        <TouchableOpacity onPress={() => setShow(true)} style={{ flexDirection:"row", padding: 10 }}>
+          <FontAwesome name="calendar" size={20} color="black" />
+          <Text style={{ paddingLeft: 5 }}>{date.toLocaleString()}</Text>
+        </TouchableOpacity>
+
+        {/* Modal DateTime Picker */}
+        <DateTimePickerModal
+          isVisible={show}
           mode="datetime"
           display="default"
-          onChange={onChange}
+          onConfirm={handleConfirm}
+          onCancel={() => setShow(false)}
         />
-      )}
+      </View>
+
 
       <Text style={styles.label}>Loại:</Text>
       <Select selectedValue={type} minWidth="200" accessibilityLabel="Choose Service" placeholder="Choose Service" _selectedItem={{
@@ -132,20 +185,81 @@ const AdminCreate: React.FC = () => {
           <Select.Item label="Thành phố" value="city" />
           <Select.Item label="Quốc gia" value="national" />
         </Select>
-
-      <Text style={styles.label}>Mục:</Text>
-      <Select selectedValue={category} minWidth="200" accessibilityLabel="Choose Service" placeholder="Choose Service" _selectedItem={{
+      
+        <Text style={styles.label}>Đơn vị:</Text>
+      <Select selectedValue={groupId} minWidth="200" accessibilityLabel="Choose Service" placeholder="Choose Service" _selectedItem={{
         bg: "teal.600",
-        endIcon: <CheckIcon size="2" />
-      }} mt={1} onValueChange={itemValue => SetCategory(itemValue)}>
-          <Select.Item label="3b" value="3b" />
-          <Select.Item label="3c" value="3c" />
+        endIcon: <CheckIcon size="3" />
+      }} mt={1} onValueChange={itemValue => SetgroupId(itemValue)}>
+          
+          {groupList.map((item, index) => (
+          <Select.Item key={index} label={item.name} value={item.id} />
+          ))}
         </Select>
 
-      <MapScreen></MapScreen>
-
-      <Button onPress={handleSubmit} >Tạo hoạt động</Button>
+      <Text style={styles.label}>Mục:</Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, margin: 10, marginLeft: 0 }}>
+      {[
+        { label: "Câu lạc bộ, hoạt động học thuật, nghiên cứu khoa học", value: "1b" },
+        { label: "Hoạt động chính trị, xã hội, văn hóa, văn nghệ, thể thao", value: "3a" },
+        { label: "Tình nguyện, công ích, công tác xã hội", value: "3b" },
+        { label: "Tuyên truyền, phòng chống tội phạm, tệ nạn xã hội", value: "3c" },
+        { label: "Phong trào Lớp, Đoàn, Hội, công tác đoàn thể xã hội", value: "5a" },
+      ].map((item) => (
+        <View key={item.value} style={{ flexDirection: "row", alignItems: "center" }}>
+          <Checkbox
+            value={item.value}
+            size="md"
+            isChecked={category.includes(item.value)}
+            onChange={() => handleCheckboxChange(item.value)}
+            colorScheme="blue"
+          />
+          <Text style={{ marginLeft: 5 }}>{item.label}</Text>
+        </View>
+      ))}
+      
     </View>
+
+    <View>
+    <TouchableOpacity 
+      style={{ 
+        flexDirection: "row", 
+        alignItems: "center", 
+        padding: 10, 
+        borderRadius: 8 ,
+        justifyContent: "center",
+        marginVertical: 10
+      }} 
+      onPress={() => setIsOpen(true)}
+    >
+      <Icon name="map" size={25} color="#0066CC" />
+      <Text style={{ color: "#0066CC", marginLeft: 8, fontWeight: "bold", fontSize: 18 }}>Mở Bản Đồ</Text>
+    </TouchableOpacity>
+    
+    <Modal visible={isOpen} animationType="slide" transparent={true}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" }}>
+        <View style={{ width: "90%", height: "80%", backgroundColor: "white", borderRadius: 10, padding: 10 }}>
+          <MapScreen onClose={() => setIsOpen(false)} />
+        </View>
+      </View>
+    </Modal>
+  </View>
+
+
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+      {/* Button "Tạo hoạt động" có chiều rộng 60% */}
+      <Button
+        onPress={handleSubmit}
+        style={{ width: '60%',backgroundColor: "#0066CC" }}
+      >Tạo hoạt động</Button>
+      {/* Button "Quay lại" có chiều rộng 30% */}
+      <Button
+        onPress={() => navigation.goBack()}
+        style={{ width: '35%' , backgroundColor: "#0066CC"}}
+      >Quay lại</Button>
+    </View>
+    </View>
+    </SafeAreaView>
   );
 };
 
@@ -153,12 +267,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f9f9f9"
+    backgroundColor: "#f9f9f9",
+    marginTop: 20
   },
   label: {
     fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 5
+    marginVertical: 5
   },
   input: {
     height: 40,
@@ -168,7 +283,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 5,
     backgroundColor: "white"
-  }
+  },
+  
 });
 
 export default AdminCreate;

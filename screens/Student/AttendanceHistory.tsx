@@ -1,15 +1,16 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, FlatList, Button, ScrollView } from 'react-native';
-import { Container, Card } from 'native-base';
+import { Container, Card, Center } from 'native-base';
 import { AuthContext } from '../../Context/Authcontext';
 import HeaderComponent from '../../component/View/Header';
 import Fooster from '../../component/View/Fooster';
 const AttendanceScreen = () => {
-  const [attendanceData, setAttendanceData] = useState(null);
+  const [attendanceData, setAttendanceData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const authContext = useContext(AuthContext);
   const { apiUrl, token } = authContext;
+
 
   useEffect(() => {
     const fetchAttendanceHistory = async () => {
@@ -23,7 +24,7 @@ const AttendanceScreen = () => {
         });
 
         const data = await response.json();
-        setAttendanceData(data.history);
+        setAttendanceData(data.history || []);
       } catch (error) {
         setError('Error fetching data');
       } finally {
@@ -51,66 +52,80 @@ const AttendanceScreen = () => {
   }
 
   const renderItem = ({ item }) => {
+    
     const activity = item.activity_id;
-    return (
-      <Card style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.headerText}>{activity.name}</Text>
-        </View>
-        <View style={styles.cardBody}>
-          <Text style={styles.cardText}>Ngày: {new Date(activity.date).toLocaleDateString()}</Text>
-          <Text style={styles.cardText}>Trạng thái: {item.status}</Text>
-          <Text style={styles.cardText}>Thời gian: {new Date(item.timestamp).toLocaleString()}</Text>
-        </View>
-        <View style={styles.cardFooter}>
-          <Button title="Chi tiết" onPress={() => console.log('Xem chi tiết')} />
-        </View>
-      </Card>
-    );
+    if(!activity){
+      return
+    }else{
+      return (
+        <Card style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.headerText}>Tên hoạt động: {activity.name}</Text>
+          </View>
+          <View style={styles.cardBody}>
+            <Text style={styles.cardText}>Ngày: {new Date(activity.date).toLocaleDateString()}</Text>
+            <Text style={styles.cardText}>Trạng thái: {item.status==="present"?"Đã điểm danh":"Chưa điểm danh"}</Text>
+            <Text style={styles.cardText}>Thời gian: {new Date(item.timestamp).toLocaleString()}</Text>
+          </View>
+        </Card>
+      );
+    }
+
   };
 
   return (
     <View style={styles.pageContainer}>
     <ScrollView contentContainerStyle={styles.scrollViewContent}>
     <HeaderComponent></HeaderComponent>
-    <Container>
+    <View style={{ flex: 1 }}>
       <View style={styles.headerContainer}>
         <Text style={styles.title}>Lịch sử điểm danh</Text>
       </View>
-      <FlatList
-        data={attendanceData}
-        renderItem={renderItem}
-        keyExtractor={(item) => item._id}
-      />
-    </Container>
+      {attendanceData.length === 0 ? (
+        <Center>
+          <Text style={{ color: "black",margin: 50 }}>Bạn chưa có hoạt động nào</Text>
+        </Center>
+      ) : (
+        <FlatList
+          data={attendanceData}
+          renderItem={renderItem}
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={{ alignItems: "center", width: "100%" }}
+        />
+      )}
+    </View>
     </ScrollView>
-    <Fooster></Fooster>
+    <Fooster selected={1}></Fooster>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   pageContainer: {
-    flex: 1,  // This ensures that the page takes up the full height of the screen
-    justifyContent: 'flex-end',  // Ensures footer is at the bottom
+    flex: 1,  
+    justifyContent: 'flex-end',  
   },
   scrollViewContent: {
-    flexGrow: 1,  // Ensures ScrollView content can expand but footer stays at the bottom
-    paddingBottom: 50,  // Adjust this value to give space above the footer
+    paddingBottom: 50,  
   },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    width: "100%"
   },
   headerContainer: {
     alignItems: 'center',
-    marginVertical: 20,
+    marginTop: 20,
+    width: "100%"
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: '#0066CC',
+    alignItems: "center",
+    justifyContent: "center",
+    
   },
   loadingContainer: {
     flex: 1,
@@ -124,13 +139,12 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 15,
     borderRadius: 10,
-    elevation: 3,
+    borderWidth: 1,
+    width: "100%",
+    margin: 10
   },
   cardHeader: {
-    backgroundColor: '#f0f0f0',
     padding: 10,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
   },
   headerText: {
     fontSize: 18,

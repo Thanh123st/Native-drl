@@ -1,22 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Button, Text, Alert } from 'react-native';
+import { StyleSheet, View, Button, Text, Alert, TouchableOpacity } from 'react-native';
 import MapView, { Marker, Circle } from 'react-native-maps';
+import { Slider } from 'native-base';
 import * as Location from 'expo-location';
-import { Slider } from 'native-base';  // Import Slider từ Native Base
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function MapScreen() {
+export default function MapScreen({ onClose }) {
   const [location, setLocation] = useState<any>(null);
   const [marker, setMarker] = useState<any>(null);
-  const [radius, setRadius] = useState(20);  // Radius in meters
-  const [showMap, setShowMap] = useState(true);
+  const [radius, setRadius] = useState(20);
   const [coordinates, setCoordinates] = useState<{ lat: number; lon: number } | null>(null);
-
-  // Ref để tham chiếu đến MapView
   const mapViewRef = useRef<MapView | null>(null);
+  const [mapType, setMapType] = useState<"standard" | "satellite" | "hybrid">("standard");
+
+  const toggleMapType = () => {
+    setMapType((prev) => (prev === "standard" ? "hybrid" : "standard"));
+  };
 
   useEffect(() => {
-    // Yêu cầu quyền truy cập vị trí và lấy vị trí hiện tại của người dùng
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
@@ -39,35 +40,36 @@ export default function MapScreen() {
   };
 
   const handleSaveLocation = async () => {
-    if (coordinates) {
-      Alert.alert('Vị trí đã lưu', `Latitude: ${coordinates.lat}\nLongitude: ${coordinates.lon}`);
-      await AsyncStorage.setItem('Latitude', coordinates.lat.toString()); // Đảm bảo giá trị là chuỗi
-      await AsyncStorage.setItem('Longitude', coordinates.lon.toString()); // Đảm bảo giá trị là chuỗi
-      setShowMap(false);
+    let lat = coordinates?.lat || location?.coords.latitude;
+    let lon = coordinates?.lon || location?.coords.longitude;
+    if (onClose) {
+      onClose();
+    }
+    if (lat && lon) {
+      Alert.alert('Vị trí đã lưu');
+      await AsyncStorage.setItem('Latitude', lat.toString());
+      await AsyncStorage.setItem('Longitude', lon.toString());
     } else {
-      Alert.alert('Error', 'Hãy chọn một vị trí trên bản đồ trước.');
+      Alert.alert('Lỗi', 'Không thể lưu vị trí. Hãy thử lại.');
     }
   };
-  
 
   const handleFocusLocation = () => {
-    setMarker(null);
     if (location) {
       const region = {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-        latitudeDelta: 0.0028386,
-        longitudeDelta: 0.0003333,
+        latitudeDelta: 0.003,
+        longitudeDelta: 0.003,
       };
-
-      mapViewRef.current?.animateToRegion(region, 1000); // Di chuyển bản đồ đến vị trí hiện tại với thời gian chuyển động là 1 giây
+      
+      mapViewRef.current?.animateToRegion(region, 1000);
+      setMarker({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
     }
   };
-
-
-
-
-
 
   if (!location) {
     return <Text>Đang lấy vị trí...</Text>;
@@ -75,87 +77,108 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
-      {showMap && (
-        <MapView
-          ref={mapViewRef}
-          style={styles.map}
-          initialRegion={{
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
-          onLongPress={handleLongPress}
-        >
-          
-          {marker && (
-            <>
-              <Marker coordinate={marker} title="Vị trí chọn" description="Bạn đã chọn vị trí này" />
-              {/* Vẽ vòng tròn với bán kính */}
-              <Circle
-                center={marker}
-                radius={radius} // bán kính trong đơn vị mét
-                strokeWidth={2}
-                strokeColor="blue"
-                fillColor="rgba(0, 0, 255, 0.1)"
-              />
-            </>
-          )}
-          {location && !marker && (
-            <>
-            
-            <Marker coordinate={{latitude: location.coords.latitude,longitude: location.coords.longitude}} title="Vị trí của bạn" description="Vị trí của bạn" />
-
-            <Circle
-              center={{
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-              }}
-              radius={radius}
-              strokeWidth={2}
-              strokeColor="red"
-              fillColor="rgba(255, 0, 0, 0.1)"
-            />
-            </>
-          )}
-        </MapView>
-      )}
-
-      {!showMap && coordinates && (
-        <View style={styles.coordinatesContainer}>
-          <Text style={styles.coordinatesText}>
-            Vị trí đã chọn: {`Latitude: ${coordinates.lat}, Longitude: ${coordinates.lon}`}
-          </Text>
-        </View>
-      )}
-
-      <Button title="Lưu vị trí và đóng bản đồ" onPress={handleSaveLocation} />
-      <Button title="Focus về vị trí hiện tại" onPress={handleFocusLocation} />
-
-      {/* Thêm slider từ Native Base để thay đổi bán kính */}
       
+      <MapView
+        ref={mapViewRef}
+        style={styles.map}
+        initialRegion={{
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          latitudeDelta: 0.001,
+          longitudeDelta: 0.001,
+        }}
+        mapType={mapType}
+        onLongPress={handleLongPress}
+      >
+        {marker && (
+          <>
+            <Marker coordinate={marker} title="Vị trí chọn" />
+            <Circle center={marker} radius={radius} strokeWidth={2} strokeColor="blue" fillColor="rgba(0, 0, 255, 0.1)" />
+          </>
+        )}
+        {!marker && location && (
+          <>
+            <Marker coordinate={location.coords} title="Vị trí của bạn" />
+            <Circle center={location.coords} radius={radius} strokeWidth={2} strokeColor="red" fillColor="rgba(255, 0, 0, 0.1)" />
+          </>
+        )}
+        <View style={styles.mapButtonContainer}>
+          <TouchableOpacity 
+            style={styles.mapButton} 
+            onPress={toggleMapType}
+          >
+            <Text style={styles.buttonText}>🗺</Text>
+          </TouchableOpacity>
+        </View>
+      </MapView>
+
+      
+      <View style={{ flexDirection:"column", alignItems:"center" }}>
+      <Slider
+      w="3/4"
+      maxW="300"
+      defaultValue={40}
+      minValue={10}
+      maxValue={120}
+      step={10}
+      accessibilityLabel="Thanh trượt"
+      onChange={(value) => setRadius(value)} 
+
+    >
+      <Slider.Track bg="gray.300">
+        <Slider.FilledTrack bg="blue.500"/>
+      </Slider.Track>
+      <Slider.Thumb bg="blue.500" />
+    </Slider>
+    <Text>Bán kính: {radius}m</Text>
+    </View>
+
+      <View style={styles.buttonsContainer}>
+      <TouchableOpacity style={styles.button} onPress={handleSaveLocation} >
+        <Text style={styles.buttonText}>Xác nhận vị trí</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button} onPress={handleFocusLocation}>
+        <Text style={styles.buttonText}>Về vị trí hiện tại</Text>
+      </TouchableOpacity>
+
+      </View>
+
+      <Text style={styles.note}>Vui lòng xác nhận vị trí trước khi tạo hoạt động.</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  container: { flex: 1 },
+  map: { width: '100%', height: '80%' },
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 10,
   },
-  map: {
-    width: '100%',
-    height: '70%',
+  note: {
+    color: "grey",
+    textAlign: "center",
+    marginTop: 10,
   },
-  coordinatesContainer: {
-    padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 5,
-    marginTop: 20,
-  },
-  coordinatesText: {
-    fontSize: 16,
+  button: {
+    backgroundColor: 'transparent', // Màu nền xanh dương
+    
   },
   
+  buttonText: {
+    color: '#0066CC',
+    fontSize: 17
+  },
+  mapButtonContainer: {
+    position: "absolute",
+    top: 20, // Khoảng cách từ trên xuống
+    left: 20, // Góc trái
+  },
+  mapButton: {
+    backgroundColor: "rgba(0, 0, 0, 0.6)", // Nền trong suốt
+    padding: 10,
+    borderRadius: 8,
+  },
 });

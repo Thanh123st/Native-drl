@@ -1,13 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, HStack, Pressable, Center, Icon, Text } from "native-base";
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const Fooster = () => {
-  const [selected,SetSelected] = useState(0);
+
+
+const Fooster = ({ selected }: { selected: number }) => {
   const navigation = useNavigation();
-  const [currentSelected, setCurrentSelected] = useState(selected || 0); // Đảm bảo giá trị mặc định là 0
+  const [role, setRole] = useState<string | null>(null);
 
+    useEffect(() => {
+      const fetchRole = async () => {
+        const storedRole = await AsyncStorage.getItem("role");
+        setRole(storedRole);
+      };
+  
+      fetchRole();
+    }, []);
+  
   return (
     <Box flex={1} bg="" safeAreaTop width="100%" alignSelf="center" style={{
       position: 'absolute', // Đặt footer cố định ở dưới cùng
@@ -26,20 +37,19 @@ const Fooster = () => {
       >
         <Pressable 
           cursor="pointer" 
-          opacity={currentSelected === 0 ? 1 : 0.5} 
+          opacity={selected === 0 ? 1 : 0.5} 
           py="3" 
           flex={1} 
           onPress={() => {
-            setCurrentSelected(0);
             navigation.navigate("Activitylist");
           }}
         >
           <Center>
             <Icon 
               mb="1" 
-              as={<MaterialCommunityIcons name={currentSelected === 0 ? 'home' : 'home-outline'} />} 
+              as={<MaterialCommunityIcons name={selected === 0 ? 'home' : 'home-outline'} />} 
               color="white" 
-              size="sm" 
+              size="md" 
             />
             <Text color="white" fontSize="12">
               Home
@@ -49,66 +59,87 @@ const Fooster = () => {
 
         <Pressable 
           cursor="pointer" 
-          opacity={currentSelected === 1 ? 1 : 0.5} 
+          opacity={selected === 1 ? 1 : 0.5} 
           py="2" 
           flex={1} 
           onPress={() => {
-            setCurrentSelected(1);
             navigation.navigate("AttHisory");
           }}
         >
           <Center>
             <Icon 
               mb="1" 
-              as={<MaterialIcons name="search" />} 
+              as={<MaterialIcons name="list" />} 
               color="white" 
-              size="sm" 
+              size="md" 
             />
             <Text color="white" fontSize="12">
-              Search
+              History
             </Text>
           </Center>
         </Pressable>
-
+        
+        {role === "admin" && (
         <Pressable 
-          cursor="pointer" 
-          opacity={currentSelected === 2 ? 1 : 0.6} 
+          opacity={selected === 4 ? 1 : 0.5} 
           py="2" 
           flex={1} 
-          onPress={() => {
-            setCurrentSelected(2);
-            navigation.navigate("AdCreate");
-          }}
+          onPress={() => navigation.navigate("AdList")}
         >
           <Center>
             <Icon 
               mb="1" 
-              as={<MaterialCommunityIcons name={currentSelected === 2 ? 'cart' : 'cart-outline'} />} 
+              as={<MaterialIcons name="list" />} 
               color="white" 
-              size="sm" 
+              size="md" 
             />
             <Text color="white" fontSize="12">
-              Cart
+              List
             </Text>
           </Center>
-        </Pressable>
+        </Pressable>)}
+
+        {role === "admin" && (
+          <Pressable 
+            cursor="pointer" 
+            opacity={selected === 2 ? 1 : 0.6} 
+            py="2" 
+            flex={1} 
+            onPress={() => {
+              navigation.navigate("AdCreate");
+            }}
+          >
+            <Center>
+              <Icon 
+                mb="1" 
+                as={<MaterialCommunityIcons name={selected === 2 ? 'folder' : 'folder-outline'} />} 
+                color="white" 
+                size="md" 
+              />
+              <Text color="white" fontSize="12">
+                Create
+              </Text>
+            </Center>
+          </Pressable>
+        )}
+
+
 
         <Pressable 
           cursor="pointer" 
-          opacity={currentSelected === 3 ? 1 : 0.5} 
+          opacity={selected === 3 ? 1 : 0.5} 
           py="2" 
           flex={1} 
           onPress={() => {
-            setCurrentSelected(3);
             navigation.navigate("StudentDetail");
           }}
         >
           <Center>
             <Icon 
               mb="1" 
-              as={<MaterialCommunityIcons name={currentSelected === 3 ? 'account' : 'account-outline'} />} 
+              as={<MaterialCommunityIcons name={selected === 3 ? 'account' : 'account-outline'} />} 
               color="white" 
-              size="sm" 
+              size="md" 
             />
             <Text color="white" fontSize="12">
               Account

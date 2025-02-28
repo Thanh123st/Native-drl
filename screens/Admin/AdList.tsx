@@ -9,41 +9,47 @@ import { RootStackParamList } from "../../types";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import HeaderComponent from "../../component/View/Header";
 import Fooster from "../../component/View/Fooster";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { FontAwesome } from '@expo/vector-icons';
+  import { FontAwesome } from '@expo/vector-icons';
 import { Alert } from "react-native";
 type ListScreenNavigationProp = NativeStackNavigationProp<RootStackParamList,"Activitylist">;
 
-const ActivityList = () => {
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigation = useNavigation<ListScreenNavigationProp>();
-  const authContext = useContext(AuthContext);
-  const { apiUrl, token } = authContext;
+const AdList = () => {
+    const [activities, setActivities] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const navigation = useNavigation<ListScreenNavigationProp>();
+    const authContext = useContext(AuthContext);
+    const { apiUrl, token, groupId } = authContext;
+    
 
-  
+    
     const fetchActivities = async () => {
-      try {
-        const response = await axios.get(`${apiUrl}/api/superadmin/activities`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        setActivities(response.data);
-        console.log(response.data[0]);
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu:", error);
-        setError("Không thể tải dữ liệu. Vui lòng thử lại!");
-      } finally {
-        setLoading(false);
-      }
-    };
+        try {
+          const response = await axios.post(`${apiUrl}/group-admin/activities`, {
+            groupIds: groupId
+          }, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          });
+          console.log("DAta",response.data);
+          const rawData = response.data; // Mảng các nhóm
+          console.log("Raw Data:", rawData);
+      
+          const allActivities = rawData.map(group => group.activities).flat(); 
+          setActivities(allActivities);
+        } catch (error) {
+          console.error("Lỗi khi lấy dữ liệu:", error);
+          setError("Không thể tải dữ liệu. Vui lòng thử lại!");
+        } finally {
+          setLoading(false);
+        }
+      };
   useEffect(() => {
     fetchActivities();
   }, []);
   
-
 
   if (loading) {
     return (
@@ -61,6 +67,56 @@ const ActivityList = () => {
     );
   }
 
+  const handleLockUser = async (id: string) => {
+    console.log("block")
+    try {
+      const response = await fetch(`${apiUrl}/api/superadmin/toggle-lock/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${token}`, 
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (response.status===200) {
+        const data = await response.json();
+        if(data.activity.isLocked){
+          Alert.alert("Thành công", "Hoạt động đã được cập nhật đã khóa!");
+        }else{
+          Alert.alert("Thành công", "Hoạt động đã được cập nhật đã mở khóa!");
+        }
+      }
+  
+      
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Lỗi", "Đã xảy ra lỗi khi thực hiện thao tác.");
+    }
+  };
+  
+  const handleDeleteActivity = async (id: string) => {
+    try {
+      const response = await fetch(`${apiUrl}/api/superadmin/activity/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error("Không thể xóa hoạt động!");
+      }
+  
+      Alert.alert("Thành công", "Hoạt động đã được xóa!");
+      fetchActivities();
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Lỗi", "Đã xảy ra lỗi khi thực hiện thao tác.");
+    }
+  };
+
+  
 
   return (
     <View style={styles.pageContainer}>
@@ -88,29 +144,31 @@ const ActivityList = () => {
         {activities.length === 0 ? (
           <Text textAlign="center" color="gray.500">Không có hoạt động nào.</Text>
         ) : (
-            activities.slice().reverse().filter((activity) => activity.isLocked === false && new Date(activity.date) <= new Date()).map((activity) => (
+            activities.map((activity) => (
             <Box key={activity._id} p={4} borderWidth={1} borderRadius="lg">
               <Text fontSize="lg" bold>{activity.name}</Text>
-              <Text color="gray.600">{activity.description}</Text>
-              <Text fontSize="sm" color="gray.400">
-              🗓 Ngày tổ chức: {new Date(activity.date).toLocaleDateString()}
-              </Text>
 
-              {/* Kiểm tra nếu có địa điểm thì hiển thị */}
-              {activity.locations?.length > 0 && (
-                <VStack mt={2}>
-                  <Text bold>📍 Địa điểm:</Text>
-                  {activity.locations.map((loc) => (
-                    <Text key={loc._id}>
-                      - Lat: {loc.lat}, Lon: {loc.lon}, Bán kính: {loc.radius}m
-                    </Text>
-                  ))}
-                </VStack>
-              )}
+
               <View style={{ flexDirection: "row", padding: 10 , justifyContent:"space-between", flexWrap: "wrap"  }}>
                 <Button style={{ backgroundColor: "#0000DD", width: "100%"  }} onPress={() => navigation.navigate("StudentRC", { activityid: activity._id  })}>Điểm danh hoạt động</Button>
               </View>
+              
+              <View style={{ flexDirection: "row", padding: 10 , justifyContent:"space-between", flexWrap: "wrap"  }}>
+                
+                  <TouchableOpacity style={[styles.actionButton,styles.btnclip]} onPress={() => navigation.navigate("Attendance", { activityId: activity._id, ActivityName: activity.name  })}>
+                    <FontAwesome name="clipboard" size={20} color="white"/>
+                  </TouchableOpacity>                
+                  <TouchableOpacity style={[styles.actionButton,styles.btndelete]} onPress={() => handleDeleteActivity(activity._id)}>
+                    <FontAwesome name="trash" size={20} color="white" />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionButton,styles.btntrash]} onPress={() => handleLockUser(activity._id)}>
+                    <FontAwesome name="lock" size={20} color="white"/>
+                  </TouchableOpacity>
 
+                
+
+              </View>
+              
             </Box>
           ))
          )}
@@ -120,7 +178,7 @@ const ActivityList = () => {
 
       </VStack>
     </ScrollView>
-    <Fooster selected={0}></Fooster>
+    <Fooster selected={4}></Fooster>
     </View>
   );
 };
@@ -169,4 +227,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default ActivityList;
+export default AdList;

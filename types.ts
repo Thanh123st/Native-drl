@@ -1,5 +1,6 @@
 export type RootStackParamList = {
     Activitylist: undefined;
-    StudentRC: { activityid: string; name: string };
+    StudentRC: { activityid: string };
+    Attendance: {activityId: string; ActivityName: string};
   };
   

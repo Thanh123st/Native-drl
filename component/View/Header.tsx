@@ -1,10 +1,12 @@
-import React from "react";
+import React, {useState, useEffect} from "react";
 import { View, Text, Image, Box, Menu, Pressable } from "native-base";
 import { SafeAreaView } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { StyleSheet } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const HeaderComponent = () => {
+    
     return (
         <View style={styles.safeAreaContainer}>
             <Box style={styles.headerContainer}>
@@ -47,8 +49,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: "#0066CC",
-        padding: 10,
-        paddingTop: 20,
+        padding: 20,
+        paddingTop: 40,
         justifyContent: 'space-between',
     },
     imageContainer: {

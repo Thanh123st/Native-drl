@@ -3,6 +3,7 @@ import { ScrollView } from "react-native";
 import { Box, Text, VStack, Spinner, Button } from "native-base";
 import LocationAuth from "../../component/LocationAuth";
 import { useRoute,RouteProp } from "@react-navigation/native";
+import { RootStackParamList } from "../../types";
 type StudentRCRouteProp = RouteProp<RootStackParamList, "StudentRC">;
 
 const StdentAcpRC = () => {

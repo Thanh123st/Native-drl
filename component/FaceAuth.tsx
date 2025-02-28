@@ -56,6 +56,7 @@ export default function FaceAuth() {
         },
       });
       console.log('Upload success:', response.data);
+      alert(response.message);
     } catch (error) {
       console.error('Upload failed:', error);
     }
@@ -70,7 +71,7 @@ export default function FaceAuth() {
             <Text style={styles.text}>Lật ảnh</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={captureAndUploadImages}>
-            <Text style={styles.text}>{capturing ? 'Capturing...' : 'Chụp và gửi ảnh đi'}</Text>
+            <Text style={styles.text}>{capturing ? 'Capturing...' : 'Chụp và gửi ảnh đi '}</Text>
           </TouchableOpacity>
         </View>
       </CameraView>

@@ -4,7 +4,6 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NativeBaseProvider } from "native-base";
 
 //Authentication
-import HomeScreen from "./screens/Authentication/Homescr";
 import LoginScreen from "./screens/Authentication/Loginscr";
 import RegisterScreen from "./screens/Authentication/Registerscr";
 
@@ -18,15 +17,17 @@ import AdminCreate from "./screens/Admin/AdminCreate";
 
 import FaceAuth from "./component/FaceAuth";
 
-import FaceVerity from "./component/FaceVerity";
-
-import TestScreen from "./screens/Test";
 import StudentDetail from "./screens/Student/StdentDetail";
 import StdentAcpRC from "./screens/Student/StudentAcpRC";
 //Context
 import { AuthProvider } from "./Context/Authcontext";
-
+import MapScreen from "./component/View/MapScreen";
 import AttendanceHistory from "./screens/Student/AttendanceHistory";
+import Forgetpass from "./screens/Authentication/Forget-password";
+import Attendance from "./screens/Admin/Attendance";
+
+import AdList from "./screens/Admin/AdList";
+
 
 const Stack = createNativeStackNavigator();
 
@@ -37,26 +38,24 @@ export default function App(){
     <AuthProvider>
       <NavigationContainer>
         <Stack.Navigator  initialRouteName="Login">
-          <Stack.Screen name="Homescreen" component={HomeScreen} options={{ headerShown: false }} />
 
           {/* Student */}
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
-          
-          <Stack.Screen name="FaceAuth" component={FaceAuth} options={{ headerShown: false }} />
-
-
+          <Stack.Screen name="Forgetpass" component={Forgetpass} options={{ headerShown: false }} />
           <Stack.Screen name="Activitylist" component={ActivityList} options={{ headerShown: false }} />
           <Stack.Screen name="StudentRC" component={StdentRC} options={{ headerShown: false }} />
           <Stack.Screen name="StdentAcpRC" component={StdentAcpRC} options={{ headerShown: false }} />
-          <Stack.Screen name="AttHisory" component={AttendanceHistory} options={{ headerShown: false }} />
           <Stack.Screen name="StudentDetail" component={StudentDetail} options={{ headerShown: false }} />
+          <Stack.Screen name="AttHisory" component={AttendanceHistory} options={{ headerShown: false }} />
           <Stack.Screen name="TermsAndPrivacy" component={TermsAndPrivacyScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="FaceAuth" component={FaceAuth} options={{ headerShown: false }} />
 
           {/* Admin */}
           <Stack.Screen name="AdCreate" component={AdminCreate} options={{ headerShown: false }}/>
+          <Stack.Screen name="Attendance" component={Attendance} options={{ headerShown: false }}/>
+          <Stack.Screen name="AdList" component={AdList} options={{ headerShown: false }}/>
 
-          <Stack.Screen name="Test" component={TestScreen} options={{ headerShown: false }} />
 
 
           

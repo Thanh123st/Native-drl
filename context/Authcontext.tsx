@@ -1,10 +1,7 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Định nghĩa kiểu dữ liệu cho Context
 interface AuthContextType {
-  isLoggedIn: boolean;
-  setIsLoggedIn: (value: boolean) => void;
   email: string;
   setEmail: (email: string) => void;
   token: string;
@@ -16,6 +13,8 @@ interface AuthContextType {
   apiUrl: string;
   tokenauth: string;
   setTokenauth: (name: string) => void;
+  groupId: string[]; 
+  setGroupId: (groupId: string[]) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -25,14 +24,15 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [email, setEmail] = useState<string>('');
   const [token, setToken] = useState<string>('');
   const [role, setRole] = useState<string>('');
   const [accountName, setAccountName] = useState<string>('');
   const [tokenauth, setTokenauth] = useState<string>('');
-  const apiUrl = 'http://192.168.10.72:8000';
-
+  const [groupId, setGroupId] = useState([]);
+  const apiUrl = 'https://deploy-4vm6.onrender.com';
+  let text = "https://deploy-4vm6.onrender.com";
+  let ru = "http://192.168.10.47:8000";
   // Khôi phục trạng thái đăng nhập từ AsyncStorage
   useEffect(() => {
     const loadAuthData = async () => {
@@ -40,13 +40,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const storedEmail = await AsyncStorage.getItem('email');
         const storedToken = await AsyncStorage.getItem('token');
         const storedRole = await AsyncStorage.getItem('role');
-        const storedLoggedIn = await AsyncStorage.getItem('isLoggedIn');
 
-        if (storedLoggedIn === 'true' && storedEmail && storedToken) {
+        if (storedEmail && storedToken) {
           setEmail(storedEmail);
           setToken(storedToken);
           setRole(storedRole || '');
-          setIsLoggedIn(true);
         }
       } catch (error) {
         console.error('❌ Lỗi khi tải dữ liệu đăng nhập:', error);
@@ -59,8 +57,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   return (
     <AuthContext.Provider
       value={{
-        isLoggedIn,
-        setIsLoggedIn,
         email,
         setEmail,
         token,
@@ -71,7 +67,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setAccountName,
         apiUrl,
         setTokenauth,
-        tokenauth
+        tokenauth,
+        groupId,
+        setGroupId
       }}
     >
       {children}
