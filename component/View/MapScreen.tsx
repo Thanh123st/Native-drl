@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, Button, Text, Alert, TouchableOpacity } from 'react-native';
-import MapView, { Marker, Circle } from 'react-native-maps';
+import MapView, { Marker, Circle, PROVIDER_DEFAULT  } from 'react-native-maps';
 import { Slider } from 'native-base';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -79,6 +79,7 @@ export default function MapScreen({ onClose }) {
     <View style={styles.container}>
       
       <MapView
+        provider={PROVIDER_DEFAULT}
         ref={mapViewRef}
         style={styles.map}
         initialRegion={{
