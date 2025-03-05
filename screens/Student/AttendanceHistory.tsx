@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, FlatList, Button, ScrollView } from 'react-native';
-import { Container, Card, Center } from 'native-base';
+import { Container, Card, Center, Box, Spinner } from 'native-base';
 import { AuthContext } from '../../Context/Authcontext';
 import HeaderComponent from '../../component/View/Header';
 import Fooster from '../../component/View/Fooster';
@@ -37,19 +37,12 @@ const AttendanceScreen = () => {
 
   if (loading) {
     return (
-      <Container style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </Container>
+      <Box flex={1} justifyContent="center" alignItems="center">
+        <Spinner size="lg" color="primary.500" />
+      </Box>
     );
   }
 
-  if (error) {
-    return (
-      <Container style={styles.container}>
-        <Text style={styles.errorText}>{error}</Text>
-      </Container>
-    );
-  }
 
   const renderItem = ({ item }) => {
     
@@ -137,34 +130,44 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   card: {
-    marginBottom: 15,
-    borderRadius: 10,
-    borderWidth: 1,
-    width: "100%",
-    margin: 10
+    backgroundColor: "#fff", // Nền trắng tinh tế
+    borderRadius: 15, // Bo góc mềm mại
+    padding: 15,
+    marginVertical: 10,
+    marginHorizontal: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 5,
+    elevation: 5, // Đổ bóng trên Android
   },
   cardHeader: {
-    padding: 10,
+    backgroundColor: "#007AFF", // Màu xanh hiện đại
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
   headerText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
   },
   cardBody: {
-    padding: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
   },
   cardText: {
-    fontSize: 16,
-    color: '#555',
+    fontSize: 14,
+    color: "#333", // Màu chữ tối để dễ đọc
     marginBottom: 5,
   },
-  cardFooter: {
-    justifyContent: 'flex-end',
-    backgroundColor: '#f9f9f9',
-    padding: 10,
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
+  statusPresent: {
+    color: "#27ae60", // Màu xanh lá cho trạng thái "Đã điểm danh"
+    fontWeight: "bold",
+  },
+  statusAbsent: {
+    color: "#e74c3c", // Màu đỏ cho trạng thái "Chưa điểm danh"
+    fontWeight: "bold",
   },
 });
 

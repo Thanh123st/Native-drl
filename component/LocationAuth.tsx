@@ -12,7 +12,7 @@ export default function LocationAuth({ activityid }: { activityid: string }) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [locationData, setLocationData] = useState<{ lat: number; lon: number } | null>(null);
   const navigation = useNavigation(); // Lấy navigation
-
+  
   const authContext = useContext(AuthContext);
   const { apiUrl, tokenauth } = authContext;
   console.log("TOKEN AUTH",tokenauth);

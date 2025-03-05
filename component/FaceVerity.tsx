@@ -4,13 +4,16 @@ import { Button, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-n
 import * as FileSystem from 'expo-file-system';
 import { AuthContext } from '../Context/Authcontext';
 import { useNavigation } from "@react-navigation/native"; 
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import * as ImageManipulator from 'expo-image-manipulator';
 export default function FaceVerity({ activityid }: { activityid: string }) {
-  const [facing, setFacing] = useState<CameraType>('back');
+  const [facing, setFacing] = useState<CameraType>('front');
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   const authContext = useContext(AuthContext);
-  const { apiUrl, token,setTokenauth,tokenauth } = authContext;
+  const { apiUrl, token,setTokenauth,tokenauth ,apiUrlface } = authContext;
   const navigation = useNavigation(); // Lấy navigation
+  const [capturing, setCapturing] = useState(false);
 
   if (!permission) {
     return <View />;
@@ -19,9 +22,13 @@ export default function FaceVerity({ activityid }: { activityid: string }) {
   if (!permission.granted) {
     return (
       <View style={styles.container}>
-        <Text style={styles.message}>We need your permission to show the camera</Text>
-        <Button onPress={requestPermission} title="Grant Permission" />
-      </View>
+      <Text style={styles.message}>Chúng tôi cần sự xác nhận của bạn</Text>
+      <Text style={styles.message}>trong việc chụp ảnh và quay video khi dùng ứng dụng</Text>
+
+      <TouchableOpacity style={styles.buttonacpcam} onPress={requestPermission}>
+        <Text style={styles.buttonText}>Xác nhận chấp nhận sử dụng</Text>
+      </TouchableOpacity>
+    </View>
     );
   }
 
@@ -31,12 +38,20 @@ export default function FaceVerity({ activityid }: { activityid: string }) {
 
   async function takePicture() {
     if (cameraRef.current) {
+      setCapturing(true);
       try {
-        const photo = await cameraRef.current.takePictureAsync({ base64: false });
+        const photo = await cameraRef.current.takePictureAsync({ base64: false, quality: 0.1 });
         console.log('Ảnh chụp:', photo.uri);
-        await uploadImage(photo.uri);
+        const resizedPhoto = await ImageManipulator.manipulateAsync(
+          photo.uri,
+          [{ resize: { width: photo.width * 0.5, height: photo.height * 0.5 } }], // Resize xuống 50%
+          { compress: 0.1, format: ImageManipulator.SaveFormat.JPEG } // Nén xuống 40%
+        );
+        await uploadImage(resizedPhoto.uri);
       } catch (error) {
         console.error('Lỗi khi chụp ảnh:', error);
+      } finally {
+        setCapturing(false); // Bật lại nút chụp sau khi xử lý xong
       }
     }
   }
@@ -50,14 +65,14 @@ export default function FaceVerity({ activityid }: { activityid: string }) {
       }
 
       let formData = new FormData();
-      formData.append('image', {
+      formData.append('file', {
         uri,
         name: 'photo.jpg',
         type: 'image/jpeg',
       } as any);
       formData.append('activity_id', activityid);
 
-      const response = await fetch(`${apiUrl}/api/face/verify`, {
+      const response = await fetch(`${apiUrlface}/verify_face`, {
         method: 'POST',
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -68,31 +83,42 @@ export default function FaceVerity({ activityid }: { activityid: string }) {
 
       const result = await response.json();
       console.log("ADSGfdfsgsdffgs",result);
-      if (result.status===200) {
+      if (result.is_match===true) {
         Alert.alert('Thành công', 'Ảnh đã được gửi');
-        setTokenauth(result.token);
+        setTokenauth(result.new_token);
         navigation.navigate("StdentAcpRC", { activityid });
       } else {
         Alert.alert('Lỗi', result.message || 'Không thể gửi ảnh');
+        navigation.navigate("Activitylist", { activityid });
       }
     } catch (error) {
       console.error('Lỗi khi tải ảnh:', error);
       Alert.alert('Lỗi', 'Không thể tải ảnh');
+      navigation.navigate("Activitylist", { activityid });
     }
   }
 
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} facing={facing} ref={cameraRef}>
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
-                  <Text style={styles.text}>Flip Camera</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.button} onPress={takePicture}>
-                  <Text style={styles.text}>Capture</Text>
-                </TouchableOpacity>
-              </View>
-            </CameraView>
+      {/* Camera */}
+      <View style={styles.cameraWrapper}>
+        <CameraView ref={cameraRef} style={styles.camera} facing={facing} />
+      </View>
+
+      {/* Nút điều khiển */}
+      <View style={styles.controlContainer}>
+        <TouchableOpacity style={styles.controlButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={30} color="white" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.captureButton} onPress={takePicture} disabled={capturing}>
+          <MaterialIcons name="camera-alt" size={50} color="white" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.controlButton} onPress={(toggleCameraFacing)}>
+          <Ionicons name="camera-reverse" size={30} color="white" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -100,29 +126,64 @@ export default function FaceVerity({ activityid }: { activityid: string }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: "black", // Giống ứng dụng camera
+    justifyContent: "center",
+    alignItems: "center",
   },
-  message: {
-    textAlign: 'center',
-    paddingBottom: 10,
+  cameraWrapper: {
+    width: "90%",
+    aspectRatio: 3 / 4, // Camera hình oval
+    borderRadius: 200, // Bo tròn giống quả trứng
+    overflow: "hidden", // Ẩn phần camera ngoài khung
+    alignSelf: "center",
+    backgroundColor: "black", // Đảm bảo nền tối
   },
   camera: {
     flex: 1,
   },
-  buttonContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'flex-end',
-    paddingBottom: 20,
+  controlContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "80%",
+    position: "absolute",
+    bottom: 30,
   },
-  button: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 10,
+  controlButton: {
+    padding: 15,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 50,
+  },
+  captureButton: {
+    padding: 20,
+    backgroundColor: "white",
+    borderRadius: 50,
+  },
+  permissionButton: {
+    padding: 15,
+    backgroundColor: "#007AFF",
     borderRadius: 10,
   },
-  text: {
-    fontSize: 18,
-    color: 'white',
+  buttonacpcam: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 5,
+    elevation: 5, 
+    marginHorizontal: 50
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  message: {
+    textAlign: 'center',
+    paddingBottom: 10,
   },
 });

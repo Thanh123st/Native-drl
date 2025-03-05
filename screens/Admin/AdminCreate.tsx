@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { View, Text, TextInput, Alert, StyleSheet, SafeAreaView ,TouchableOpacity , Modal} from "react-native";
+import { View, Text, TextInput, Alert, StyleSheet, SafeAreaView ,TouchableOpacity , Modal, ScrollView} from "react-native";
 import { Select, CheckIcon, Button } from "native-base";
 import { getCurrentLocation } from "../../component/locationService";
 import { AuthContext } from "../../Context/Authcontext";
@@ -127,7 +127,14 @@ const AdminCreate: React.FC = () => {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
+      <ScrollView 
+      
+      >
+      
       <View style={styles.container}>
+      <View style={{ justifyContent:"center",alignItems:"center" }}>
+        <Text style={{ fontSize: 20 }}>Tạo hoạt động</Text>
+      </View>
       <Text style={styles.label}>Tên hoạt động:</Text>
       <TextInput
         style={styles.input}
@@ -214,7 +221,7 @@ const AdminCreate: React.FC = () => {
             onChange={() => handleCheckboxChange(item.value)}
             colorScheme="blue"
           />
-          <Text style={{ marginLeft: 5 }}>{item.label}</Text>
+          <Text style={{ marginLeft: 5, flexWrap: 'wrap',width: '95%' }}>{item.label}</Text>
         </View>
       ))}
       
@@ -259,6 +266,7 @@ const AdminCreate: React.FC = () => {
       >Quay lại</Button>
     </View>
     </View>
+    </ScrollView>
     </SafeAreaView>
   );
 };

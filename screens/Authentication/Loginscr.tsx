@@ -61,6 +61,8 @@ const LoginScreen: React.FC = () => {
         if (response.status === 200) {
           const token = response.data.token;
           const decoded = decodeJWT(token);
+          const expiryTime = decoded.exp * 1000;
+          await AsyncStorage.setItem("expiryTime", expiryTime.toString());
           await AsyncStorage.setItem('email', email);
           await AsyncStorage.setItem('role', decoded.role);
           setGroupId(decoded.groupIds);
@@ -75,8 +77,8 @@ const LoginScreen: React.FC = () => {
           console.error("❌ Đăng nhập thất bại, mã phản hồi không phải 200.");
         }
       } catch (error: any) {
-        console.error("❌ Lỗi đăng nhập:", error.message);
-        Alert.alert("❌ Lỗi đăng nhập:", error.message);
+        console.error("❌ Lỗi đăng nhập:");
+        Alert.alert("❌ Lỗi đăng nhập:");
         
       }
     }
@@ -110,6 +112,7 @@ const LoginScreen: React.FC = () => {
       // Lấy Expo Push Token
       const token = (await Notifications.getExpoPushTokenAsync()).data;
       console.log("Expo Push Token:", token);
+      await AsyncStorage.setItem('Pushtoken', token);
     }
     
 

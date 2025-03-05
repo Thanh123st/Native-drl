@@ -9,8 +9,8 @@ type StudentRCRouteProp = RouteProp<RootStackParamList, "StudentRC">;
 const StdentAcpRC = () => {
   const route = useRoute<StudentRCRouteProp>();
   const { activityid } = route.params;
-
   return (
+    
     <LocationAuth activityid={activityid}/>
   );
 };

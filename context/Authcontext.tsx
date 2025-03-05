@@ -11,10 +11,12 @@ interface AuthContextType {
   accountName: string;
   setAccountName: (name: string) => void;
   apiUrl: string;
+  apiUrlface: string;
   tokenauth: string;
   setTokenauth: (name: string) => void;
   groupId: string[]; 
   setGroupId: (groupId: string[]) => void;
+
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -32,8 +34,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [groupId, setGroupId] = useState([]);
   const apiUrl = 'https://deploy-4vm6.onrender.com';
   let text = "https://deploy-4vm6.onrender.com";
-  let ru = "http://192.168.10.47:8000";
-  // Khôi phục trạng thái đăng nhập từ AsyncStorage
+  const apiUrlface = 'http://192.168.10.93:5000'
   useEffect(() => {
     const loadAuthData = async () => {
       try {
@@ -66,6 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         accountName,
         setAccountName,
         apiUrl,
+        apiUrlface,
         setTokenauth,
         tokenauth,
         groupId,

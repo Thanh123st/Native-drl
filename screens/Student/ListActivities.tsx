@@ -91,22 +91,12 @@ const ActivityList = () => {
             activities.slice().reverse().filter((activity) => activity.isLocked === false && new Date(activity.date) <= new Date()).map((activity) => (
             <Box key={activity._id} p={4} borderWidth={1} borderRadius="lg">
               <Text fontSize="lg" bold>{activity.name}</Text>
-              <Text color="gray.600">{activity.description}</Text>
-              <Text fontSize="sm" color="gray.400">
+              <Text color="black">Mô tả: {activity.description}</Text>
+              <Text fontSize="sm" color="black.400">
               🗓 Ngày tổ chức: {new Date(activity.date).toLocaleDateString()}
               </Text>
 
-              {/* Kiểm tra nếu có địa điểm thì hiển thị */}
-              {activity.locations?.length > 0 && (
-                <VStack mt={2}>
-                  <Text bold>📍 Địa điểm:</Text>
-                  {activity.locations.map((loc) => (
-                    <Text key={loc._id}>
-                      - Lat: {loc.lat}, Lon: {loc.lon}, Bán kính: {loc.radius}m
-                    </Text>
-                  ))}
-                </VStack>
-              )}
+              
               <View style={{ flexDirection: "row", padding: 10 , justifyContent:"space-between", flexWrap: "wrap"  }}>
                 <Button style={{ backgroundColor: "#0000DD", width: "100%"  }} onPress={() => navigation.navigate("StudentRC", { activityid: activity._id  })}>Điểm danh hoạt động</Button>
               </View>

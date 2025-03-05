@@ -8,11 +8,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "platforms": ["ios", "android", "web"],
     "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -23,7 +19,10 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSFaceIDUsageDescription": "Ứng dụng cần Face ID để xác thực danh tính của bạn.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Ứng dụng cần quyền truy cập vị trí để hiển thị vị trí của bạn.",
+        "NSCameraUsageDescription": "Ứng dụng cần quyền truy cập camera để quay video.",
+        "NSMicrophoneUsageDescription": "Ứng dụng cần quyền truy cập micro để ghi âm trong video."
       },
       "bundleIdentifier": "com.anonymous.nativedrl"
     },
@@ -36,7 +35,11 @@
       "permissions": [
         "NOTIFICATIONS",
         "android.permission.USE_BIOMETRIC",
-        "android.permission.USE_FINGERPRINT"
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "RECORD_AUDIO"
       ]
     },
     "web": {
@@ -46,7 +49,13 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "Allow $(native-drl) to use Face ID."
+          "faceIDPermission": "Allow native-drl to use Face ID."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Ứng dụng cần quyền truy cập vị trí để hiển thị vị trí của bạn."
         }
       ]
     ],

@@ -24,31 +24,42 @@ const AdList = () => {
 
     
     const fetchActivities = async () => {
-        try {
-          const response = await axios.post(`${apiUrl}/group-admin/activities`, {
-            groupIds: groupId
-          }, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json"
-            }
-          });
-          console.log("DAta",response.data);
-          const rawData = response.data; // Mảng các nhóm
-          console.log("Raw Data:", rawData);
-      
-          const allActivities = rawData.map(group => group.activities).flat(); 
-          setActivities(allActivities);
-        } catch (error) {
-          console.error("Lỗi khi lấy dữ liệu:", error);
-          setError("Không thể tải dữ liệu. Vui lòng thử lại!");
-        } finally {
-          setLoading(false);
+      try {
+        console.log("groupId:", groupId); // Debug xem groupId có dữ liệu không
+    
+        const response = await axios.post(`${apiUrl}/group-admin/activities`, {
+          groupIds: Array.isArray(groupId) ? groupId : [groupId] // Chắc chắn là mảng
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+    
+        console.log("Data:", response.data);
+        const rawData = response.data || [];
+    
+        if (!Array.isArray(rawData)) {
+          throw new Error("API không trả về mảng dữ liệu");
         }
-      };
-  useEffect(() => {
-    fetchActivities();
-  }, []);
+    
+        const allActivities = rawData.map(group => group.activities || []).flat();
+        setActivities(allActivities);
+        setError(null); 
+        console.log("data",activities);
+    
+      } catch (error) {
+        setError("Không thể tải dữ liệu. Vui lòng thử lại!");
+        setActivities([]); // Đảm bảo UI vẫn render
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    useEffect(() => {
+      fetchActivities();
+    }, []);
+    
   
 
   if (loading) {
@@ -59,13 +70,7 @@ const AdList = () => {
     );
   }
 
-  if (error) {
-    return (
-      <Box flex={1} justifyContent="center" alignItems="center">
-        <Text color="red.500">{error}</Text>
-      </Box>
-    );
-  }
+
 
   const handleLockUser = async (id: string) => {
     console.log("block")
@@ -116,13 +121,9 @@ const AdList = () => {
     }
   };
 
-  
 
   return (
-    <View style={styles.pageContainer}>
-
-          
-            
+    <View style={styles.pageContainer}>  
         <ScrollView contentContainerStyle={{ alignItems:"center" , justifyContent: "flex-start",paddingBottom: 70 }}>
         <HeaderComponent></HeaderComponent>
         <View style={styles.btnctn}>
@@ -141,38 +142,39 @@ const AdList = () => {
             </View>
           
       <VStack space={4} p={4}>
-        {activities.length === 0 ? (
-          <Text textAlign="center" color="gray.500">Không có hoạt động nào.</Text>
-        ) : (
-            activities.map((activity) => (
-            <Box key={activity._id} p={4} borderWidth={1} borderRadius="lg">
-              <Text fontSize="lg" bold>{activity.name}</Text>
+      {loading ? (
+        <Text textAlign="center" color="blue.500">Đang tải dữ liệu...</Text>
+      ) : error ? (
+        <Text textAlign="center" color="red.500">{error}</Text>
+      ) : activities.length === 0 ? (
+        <Text textAlign="center" color="gray.500">Không có hoạt động nào.</Text>
+      ) : (
+        activities.map((activity) => (
+          <Box key={activity._id} p={4} borderWidth={1} borderRadius="lg">
+            <Text fontSize="lg" bold>{activity.name}</Text>
 
+            <View style={{ flexDirection: "row", padding: 10 , justifyContent:"space-between", flexWrap: "wrap"  }}>
+              <Button style={{ backgroundColor: "#0000DD", width: "100%"  }} onPress={() => navigation.navigate("StudentRC", { activityid: activity._id  })}>
+                Điểm danh hoạt động
+              </Button>
+            </View>
 
-              <View style={{ flexDirection: "row", padding: 10 , justifyContent:"space-between", flexWrap: "wrap"  }}>
-                <Button style={{ backgroundColor: "#0000DD", width: "100%"  }} onPress={() => navigation.navigate("StudentRC", { activityid: activity._id  })}>Điểm danh hoạt động</Button>
-              </View>
+            <View style={{ flexDirection: "row", padding: 10 , justifyContent:"space-between", flexWrap: "wrap"  }}>
+              <TouchableOpacity style={[styles.actionButton,styles.btnclip]} onPress={() => navigation.navigate("Attendance", { activityId: activity._id, ActivityName: activity.name  })}>
+                <FontAwesome name="clipboard" size={20} color="white"/>
+              </TouchableOpacity>                
+              <TouchableOpacity style={[styles.actionButton,styles.btndelete]} onPress={() => handleDeleteActivity(activity._id)}>
+                <FontAwesome name="trash" size={20} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.actionButton,styles.btntrash]} onPress={() => handleLockUser(activity._id)}>
+                <FontAwesome name="lock" size={20} color="white"/>
+              </TouchableOpacity>
+            </View>
+          </Box>
+        ))
+      )}
+
               
-              <View style={{ flexDirection: "row", padding: 10 , justifyContent:"space-between", flexWrap: "wrap"  }}>
-                
-                  <TouchableOpacity style={[styles.actionButton,styles.btnclip]} onPress={() => navigation.navigate("Attendance", { activityId: activity._id, ActivityName: activity.name  })}>
-                    <FontAwesome name="clipboard" size={20} color="white"/>
-                  </TouchableOpacity>                
-                  <TouchableOpacity style={[styles.actionButton,styles.btndelete]} onPress={() => handleDeleteActivity(activity._id)}>
-                    <FontAwesome name="trash" size={20} color="white" />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.actionButton,styles.btntrash]} onPress={() => handleLockUser(activity._id)}>
-                    <FontAwesome name="lock" size={20} color="white"/>
-                  </TouchableOpacity>
-
-                
-
-              </View>
-              
-            </Box>
-          ))
-         )}
-        
         
 
 

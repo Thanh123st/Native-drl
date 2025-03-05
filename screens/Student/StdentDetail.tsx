@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { View, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity  } from 'react-native';
-import { Box, Text, Button, Container } from 'native-base';
+import { Box, Text, Button, Container,Spinner } from 'native-base';
 import axios from 'axios';
 import { AuthContext } from '../../Context/Authcontext';
 import HeaderComponent from '../../component/View/Header';
@@ -65,9 +65,9 @@ const StudentDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <Container style={styles.load}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </Container>
+      <Box flex={1} justifyContent="center" alignItems="center">
+        <Spinner size="lg" color="primary.500" />
+      </Box>
     );
   }
 

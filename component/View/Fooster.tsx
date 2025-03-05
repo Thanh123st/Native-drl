@@ -79,7 +79,7 @@ const Fooster = ({ selected }: { selected: number }) => {
           </Center>
         </Pressable>
         
-        {role === "admin" && (
+        {(role === "admin" || role === "super_admin") && (
         <Pressable 
           opacity={selected === 4 ? 1 : 0.5} 
           py="2" 
@@ -99,7 +99,7 @@ const Fooster = ({ selected }: { selected: number }) => {
           </Center>
         </Pressable>)}
 
-        {role === "admin" && (
+        {(role === "admin" || role === "super_admin") && (
           <Pressable 
             cursor="pointer" 
             opacity={selected === 2 ? 1 : 0.6} 
