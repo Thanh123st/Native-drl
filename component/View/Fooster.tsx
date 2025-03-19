@@ -35,6 +35,7 @@ const Fooster = ({ selected }: { selected: number }) => {
         shadow={6} 
         justifyContent="space-around"
       >
+        
         <Pressable 
           cursor="pointer" 
           opacity={selected === 0 ? 1 : 0.5} 
@@ -56,7 +57,8 @@ const Fooster = ({ selected }: { selected: number }) => {
             </Text>
           </Center>
         </Pressable>
-
+     
+        {(role !== "admin" && role !== "super_admin") && (
         <Pressable 
           cursor="pointer" 
           opacity={selected === 1 ? 1 : 0.5} 
@@ -78,7 +80,8 @@ const Fooster = ({ selected }: { selected: number }) => {
             </Text>
           </Center>
         </Pressable>
-        
+        )}
+
         {(role === "admin" || role === "super_admin") && (
         <Pressable 
           opacity={selected === 4 ? 1 : 0.5} 

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, Alert, TouchableOpacity, Platform, ActivityIndicator  } from 'react-native';
+import { StyleSheet, View, Text, Alert, TouchableOpacity, Platform, ActivityIndicator,TextInput,FlatList  } from 'react-native';
 import MapView, { Marker, Circle, PROVIDER_DEFAULT,PROVIDER_GOOGLE  } from 'react-native-maps';
 import { Slider } from 'native-base';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import axios from 'axios';
 export default function MapScreen({ onClose }) {
   const [location, setLocation] = useState<any>(null);
   const [marker, setMarker] = useState<any>(null);
@@ -13,6 +13,7 @@ export default function MapScreen({ onClose }) {
   const mapViewRef = useRef<MapView | null>(null);
   const [mapType, setMapType] = useState<"standard" | "satellite" | "hybrid">("standard");
   const [loading, setLoading] = useState(true);
+  const [searchResults, setSearchResults] = useState([]); // Danh sách kết quả tìm kiếm
 
   const toggleMapType = () => {
     setMapType((prev) => (prev === "standard" ? "hybrid" : "standard"));
@@ -89,6 +90,60 @@ export default function MapScreen({ onClose }) {
     }
   };
 
+
+  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [typingTimeout, setTypingTimeout] = useState(null);
+  
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+
+    if (typingTimeout) {
+      clearTimeout(typingTimeout); // Xóa timeout trước đó
+    }
+
+    const newTimeout = setTimeout(async () => {
+      if (!query.trim()) {
+        setSearchResults([]);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`https://nominatim.openstreetmap.org/search`, {
+          params: {
+            q: query,
+            format: "json",
+            limit: 5,
+            countrycodes: "VN",
+          },
+        });
+
+        setSearchResults(response.data);
+      } catch (error) {
+        console.error("Lỗi tìm kiếm:", error);
+        Alert.alert("Lỗi tìm kiếm địa điểm!");
+      }
+    }, 500); // Đợi 1 giây sau khi nhập xong mới gọi API
+
+    setTypingTimeout(newTimeout);
+  };
+
+  // Khi người dùng chọn một địa điểm từ danh sách
+  const handleSelectLocation = (location) => {
+    const { lat, lon, display_name } = location;
+    const newRegion = {
+      latitude: parseFloat(lat),
+      longitude: parseFloat(lon),
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    };
+
+    mapViewRef.current?.animateToRegion(newRegion, 1000);
+    setMarker({ latitude: parseFloat(lat), longitude: parseFloat(lon) });
+    setSearchQuery(display_name); // Cập nhật ô nhập với địa điểm đã chọn
+    setSearchResults([]); // Ẩn danh sách kết quả
+  };
+
   if (loading) {
     return <ActivityIndicator size="large" color="#0066CC" style={styles.loading} />;
   }
@@ -110,6 +165,28 @@ export default function MapScreen({ onClose }) {
         mapType={mapType}
         onLongPress={handleLongPress}
       >
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchBox}
+            placeholder="Nhập địa điểm..."
+            value={searchQuery}
+            onChangeText={handleSearch} // Khi mất focus mới tìm kiếm
+          />
+
+          {/* Hiển thị danh sách kết quả tìm kiếm */}
+          {searchResults.length > 0 && (
+            <FlatList
+              data={searchResults}
+              keyExtractor={(item, index) => index.toString()}
+              style={styles.searchResultsList}
+              renderItem={({ item }) => (
+                <TouchableOpacity style={styles.resultItem} onPress={() => handleSelectLocation(item)}>
+                  <Text>{item.display_name}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          )}
+        </View>
         {marker && (
           <>
             <Marker coordinate={marker} title="Vị trí chọn" />
@@ -285,5 +362,31 @@ const styles = StyleSheet.create({
   },
   androidButton: {
     marginHorizontal: 15, // Tạo khoảng cách đều hai bên
+  },
+  searchContainer: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    right: 10,
+    backgroundColor: "white",
+    borderRadius: 5,
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    zIndex: 10,
+  },
+  searchBox: {
+    height: 45,
+    paddingLeft: 10,
+    borderBottomWidth: 1,
+    borderColor: "#ddd",
+  },
+  searchResultsList: {
+    maxHeight: 200, // Giới hạn chiều cao danh sách kết quả
+  },
+  resultItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderColor: "#ddd",
   },
 });

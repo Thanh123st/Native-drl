@@ -16,7 +16,14 @@ interface AuthContextType {
   setTokenauth: (name: string) => void;
   groupId: string[]; 
   setGroupId: (groupId: string[]) => void;
-
+  attendanceData: string[]; 
+  setAttendanceData: (groupId: string[]) => void;
+  activities: string[]; 
+  setActivities: (groupId: string[]) => void;
+  activitiesAd: string[]; 
+  setActivitiesAd: (groupId: string[]) => void;
+  groupList: string[];
+  setGroupList: (groupId: string[]) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -32,9 +39,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [accountName, setAccountName] = useState<string>('');
   const [tokenauth, setTokenauth] = useState<string>('');
   const [groupId, setGroupId] = useState([]);
+  
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [activitiesAd, setActivitiesAd] = useState([]);
+  const [groupList, setGroupList] = useState([]);
+  
+
+
   const apiUrl = 'https://deploy-4vm6.onrender.com';
   let text = "https://deploy-4vm6.onrender.com";
-  const apiUrlface = 'http://192.168.10.93:5000'
+  const apiUrlface = 'https://deploy-4vm6.onrender.com'
   useEffect(() => {
     const loadAuthData = async () => {
       try {
@@ -71,7 +86,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setTokenauth,
         tokenauth,
         groupId,
-        setGroupId
+        setGroupId,
+        attendanceData, setAttendanceData,
+        activities, setActivities,
+        activitiesAd, setActivitiesAd,
+        groupList, setGroupList,
       }}
     >
       {children}

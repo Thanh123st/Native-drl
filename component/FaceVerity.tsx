@@ -90,11 +90,13 @@ export default function FaceVerity({ activityid }: { activityid: string }) {
       } else {
         Alert.alert('Lỗi', result.message || 'Không thể gửi ảnh');
         navigation.navigate("Activitylist", { activityid });
+        console.log(result);
       }
     } catch (error) {
       console.error('Lỗi khi tải ảnh:', error);
       Alert.alert('Lỗi', 'Không thể tải ảnh');
       navigation.navigate("Activitylist", { activityid });
+      
     }
   }
 

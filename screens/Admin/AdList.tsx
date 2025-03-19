@@ -1,25 +1,26 @@
-import React, { useEffect, useState ,useContext} from "react";
+import React, { useEffect, useState ,useContext, useCallback} from "react";
 import { ScrollView,Animated } from "react-native";
 import { Box, Text, VStack, Spinner, Button } from "native-base";
 import axios from "axios";
 import { StyleSheet, View , TouchableOpacity} from "react-native";
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { AuthContext } from "../../Context/Authcontext";
 import { RootStackParamList } from "../../types";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import HeaderComponent from "../../component/View/Header";
 import Fooster from "../../component/View/Fooster";
-  import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 import { Alert } from "react-native";
+import moment from "moment";
+import "moment/locale/vi";
 type ListScreenNavigationProp = NativeStackNavigationProp<RootStackParamList,"Activitylist">;
 
 const AdList = () => {
-    const [activities, setActivities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigation = useNavigation<ListScreenNavigationProp>();
     const authContext = useContext(AuthContext);
-    const { apiUrl, token, groupId } = authContext;
+    const { apiUrl, token, groupId, activitiesAd, setActivitiesAd,activities, setActivities } = authContext;
     
 
     
@@ -44,32 +45,43 @@ const AdList = () => {
         }
     
         const allActivities = rawData.map(group => group.activities || []).flat();
-        setActivities(allActivities);
+        setActivitiesAd(allActivities);
         setError(null); 
-        console.log("data",activities);
+        console.log("data",activitiesAd);
     
       } catch (error) {
         setError("Không thể tải dữ liệu. Vui lòng thử lại!");
-        setActivities([]); // Đảm bảo UI vẫn render
-      } finally {
-        setLoading(false);
-      }
+        setActivitiesAd([]);
+      } 
     };
-    
-    useEffect(() => {
-      fetchActivities();
-    }, []);
-    
-  
 
-  if (loading) {
-    return (
-      <Box flex={1} justifyContent="center" alignItems="center">
-        <Spinner size="lg" color="primary.500" />
-      </Box>
+    useFocusEffect(
+      useCallback(() => {
+        fetchActivities();
+      }, [])
     );
-  }
-
+  
+    const formatDate = (isoString) => {
+      return moment(isoString).locale("vi").format("dddd, DD [tháng] MM YYYY, HH:mm:ss");
+    };
+    const [filter, setFilter] = useState("all");
+    const mergedActivities = activities.filter(act =>
+      activitiesAd.some(ad => ad._id === act._id)
+    );
+    const filteredActivities = mergedActivities.filter(activity => {
+      const activityDate = moment(activity.date);
+      const now = moment(); 
+      switch (filter) {
+        case "today":
+          return activityDate.isSame(now, "day"); // Hoạt động diễn ra hôm nay
+        case "week":
+          return activityDate.isSame(now, "week"); // Hoạt động trong tuần
+        case "month":
+          return activityDate.isSame(now, "month"); // Hoạt động trong tháng
+        default:
+          return true; // Hiển thị tất cả
+      }
+    });
 
 
   const handleLockUser = async (id: string) => {
@@ -91,7 +103,8 @@ const AdList = () => {
           Alert.alert("Thành công", "Hoạt động đã được cập nhật đã mở khóa!");
         }
       }
-  
+      fetchActivities();
+
       
     } catch (error) {
       console.error(error);
@@ -127,38 +140,34 @@ const AdList = () => {
         <ScrollView contentContainerStyle={{ alignItems:"center" , justifyContent: "flex-start",paddingBottom: 70 }}>
         <HeaderComponent></HeaderComponent>
         <View style={styles.btnctn}>
-              <TouchableOpacity style={styles.btn} onPress={() => console.log("All")}>
+              <TouchableOpacity style={styles.btn} onPress={() => setFilter("all")}>
                 <Text style={styles.btnText}>All</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.btn} onPress={() => console.log("Month")}>
+              <TouchableOpacity style={styles.btn} onPress={() => setFilter("month")}>
                 <Text style={styles.btnText}>Month</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.btn} onPress={() => console.log("Week")}>
+              <TouchableOpacity style={styles.btn} onPress={() => setFilter("week")}>
                 <Text style={styles.btnText}>Week</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.btn} onPress={() => console.log("Day")}>
+              <TouchableOpacity style={styles.btn} onPress={() => setFilter("today")}>
                 <Text style={styles.btnText}>Day</Text>
               </TouchableOpacity>
             </View>
           
       <VStack space={4} p={4}>
-      {loading ? (
-        <Text textAlign="center" color="blue.500">Đang tải dữ liệu...</Text>
-      ) : error ? (
+      {error ? (
         <Text textAlign="center" color="red.500">{error}</Text>
-      ) : activities.length === 0 ? (
+      ) : activitiesAd.length === 0 ? (
         <Text textAlign="center" color="gray.500">Không có hoạt động nào.</Text>
       ) : (
-        activities.map((activity) => (
+        filteredActivities.map((activity) => (
           <Box key={activity._id} p={4} borderWidth={1} borderRadius="lg">
-            <Text fontSize="lg" bold>{activity.name}</Text>
+            <Text fontSize="lg" bold>Tên hoạt động: {activity.name}</Text>
 
-            <View style={{ flexDirection: "row", padding: 10 , justifyContent:"space-between", flexWrap: "wrap"  }}>
-              <Button style={{ backgroundColor: "#0000DD", width: "100%"  }} onPress={() => navigation.navigate("StudentRC", { activityid: activity._id  })}>
-                Điểm danh hoạt động
-              </Button>
+            <View style={{ flexDirection: "coldumn", padding: 10 , justifyContent:"space-between", flexWrap: "wrap"  }}>
+              <Text style={{color:"black"}}>Thời gian diễn ra:{"\n"}{formatDate(activity.date)}</Text>
+              <Text style={{color:"black"}}>Mô tả: {activity.description}</Text>
             </View>
-
             <View style={{ flexDirection: "row", padding: 10 , justifyContent:"space-between", flexWrap: "wrap"  }}>
               <TouchableOpacity style={[styles.actionButton,styles.btnclip]} onPress={() => navigation.navigate("Attendance", { activityId: activity._id, ActivityName: activity.name  })}>
                 <FontAwesome name="clipboard" size={20} color="white"/>
@@ -167,7 +176,7 @@ const AdList = () => {
                 <FontAwesome name="trash" size={20} color="white" />
               </TouchableOpacity>
               <TouchableOpacity style={[styles.actionButton,styles.btntrash]} onPress={() => handleLockUser(activity._id)}>
-                <FontAwesome name="lock" size={20} color="white"/>
+                {activity.isLocked ?<FontAwesome name="lock" size={20} color="white"/> :<FontAwesome name="unlock" size={20} color="white"/>} 
               </TouchableOpacity>
             </View>
           </Box>

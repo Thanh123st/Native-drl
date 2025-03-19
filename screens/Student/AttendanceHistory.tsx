@@ -5,11 +5,8 @@ import { AuthContext } from '../../Context/Authcontext';
 import HeaderComponent from '../../component/View/Header';
 import Fooster from '../../component/View/Fooster';
 const AttendanceScreen = () => {
-  const [attendanceData, setAttendanceData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const authContext = useContext(AuthContext);
-  const { apiUrl, token } = authContext;
+  const { apiUrl, token,attendanceData, setAttendanceData } = authContext;
 
 
   useEffect(() => {
@@ -26,22 +23,14 @@ const AttendanceScreen = () => {
         const data = await response.json();
         setAttendanceData(data.history || []);
       } catch (error) {
-        setError('Error fetching data');
-      } finally {
-        setLoading(false);
-      }
+        console.log('Error fetching data');
+      } 
     };
 
     fetchAttendanceHistory();
   }, []);
 
-  if (loading) {
-    return (
-      <Box flex={1} justifyContent="center" alignItems="center">
-        <Spinner size="lg" color="primary.500" />
-      </Box>
-    );
-  }
+ 
 
 
   const renderItem = ({ item }) => {

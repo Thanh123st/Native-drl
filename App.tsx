@@ -30,7 +30,6 @@ import Forgetpass from "./screens/Authentication/Forget-password";
 import Attendance from "./screens/Admin/Attendance";
 
 import AdList from "./screens/Admin/AdList";
-import FaceWebView from "./screens/Test";
 
 const Stack = createNativeStackNavigator();
 
@@ -96,7 +95,7 @@ export default function App(){
           <Stack.Screen name="Attendance" component={Attendance} options={{ headerShown: false }}/>
           <Stack.Screen name="AdList" component={AdList} options={{ headerShown: false }}/>
 
-          <Stack.Screen name="Test" component={FaceWebView} options={{ headerShown: false }}/>
+          <Stack.Screen name="Test" component={MapScreen} options={{ headerShown: false }}/>
 
 
           

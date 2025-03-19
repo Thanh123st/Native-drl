@@ -26,13 +26,6 @@ const AdminCreate: React.FC = () => {
     );
   };
 
-  const onChange = (event: any, selectedDate: Date | undefined) => {
-    const currentDate = selectedDate || date;
-    setShow(true);
-    setDate(currentDate);
-    setFormattedDate(currentDate.toISOString());
-  };
-
   const [location, setLocation] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const authContext = useContext(AuthContext);
@@ -41,11 +34,14 @@ const AdminCreate: React.FC = () => {
   const [groupId,SetgroupId] = useState<string>("");
   const [locationPost,setLocationPost] = useState<any>(null);
 
-  const [groupList, setGroupList] = useState([]);
+
+  const { apiUrl, token,groupList, setGroupList } = authContext;
 
   const fetchGroupAdminList = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/group-admin/list`);
+      const response = await axios.post(`${apiUrl}/group-admin/activities`,{ groupIds:" " },{
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.data && Array.isArray(response.data)) {
         const clubList = response.data.map(item => ({
           id: item._id,
@@ -63,10 +59,8 @@ const AdminCreate: React.FC = () => {
 
   useEffect(() => {
     fetchGroupAdminList();
+    console.log("Token:", token);
   }, []);
-
-  const { apiUrl, token } = authContext;
-
   const handleConfirm = (selectedDate: Date) => {
     setDate(selectedDate);
     setShow(false); // Đóng modal sau khi chọn ngày
@@ -261,7 +255,7 @@ const AdminCreate: React.FC = () => {
       >Tạo hoạt động</Button>
       {/* Button "Quay lại" có chiều rộng 30% */}
       <Button
-        onPress={() => navigation.goBack()}
+        onPress={() => navigation.navigate("AdList")}
         style={{ width: '35%' , backgroundColor: "#0066CC"}}
       >Quay lại</Button>
     </View>

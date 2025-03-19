@@ -34,6 +34,7 @@ const LoginScreen: React.FC = () => {
   };
   
   const [email, setEmail] = useState(""); 
+
   const [password, setPassword] = useState("");
   const authContext = useContext(AuthContext);
   const { setEmail: setAuthemail, setToken, apiUrl,setGroupId } = authContext;
@@ -54,10 +55,8 @@ const LoginScreen: React.FC = () => {
         }, {
           headers: { "Content-Type": "application/json" },
         });
-    
-        console.log("✅ API Response:", response.data);
         
-
+        console.log("✅ API Response:", response.data);
         if (response.status === 200) {
           const token = response.data.token;
           const decoded = decodeJWT(token);
@@ -77,8 +76,8 @@ const LoginScreen: React.FC = () => {
           console.error("❌ Đăng nhập thất bại, mã phản hồi không phải 200.");
         }
       } catch (error: any) {
-        console.error("❌ Lỗi đăng nhập:");
-        Alert.alert("❌ Lỗi đăng nhập:");
+        console.error("❌ Lỗi đăng nhập:", error.message);
+        Alert.alert("❌ Lỗi đăng nhập: Vui lòng xem lại kết nối mạng!");
         
       }
     }
